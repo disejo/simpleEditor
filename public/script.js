@@ -11,12 +11,42 @@ let contenidoInicial = {
 const opcionesEditor = { theme: 'monokai', lineNumbers: true, lineWrapping: true, tabSize: 2 };
 
 // Inicializar editores
-const editorHTML = CodeMirror.fromTextArea(document.getElementById('html-editor'), { ...opcionesEditor, mode: 'htmlmixed' });
-const editorCSS = CodeMirror.fromTextArea(document.getElementById('css-editor'), { ...opcionesEditor, mode: 'css' });
-const editorJS = CodeMirror.fromTextArea(document.getElementById('js-editor'), { ...opcionesEditor, mode: 'javascript' });
+const editorHTML = CodeMirror.fromTextArea(document.getElementById('html-editor'), {
+    ...opcionesEditor,
+    mode: 'htmlmixed',
+    hintOptions: {
+        hint: CodeMirror.hint.xml,
+        completeSingle: false
+    },
+    autoCloseTags: true
+});
+const editorCSS = CodeMirror.fromTextArea(document.getElementById('css-editor'), {
+    ...opcionesEditor,
+    mode: 'css',
+    hintOptions: {
+        hint: CodeMirror.hint.css,
+        completeSingle: false
+    }
+});
+const editorJS = CodeMirror.fromTextArea(document.getElementById('js-editor'), {
+    ...opcionesEditor,
+    mode: 'javascript',
+    hintOptions: {
+        hint: CodeMirror.hint.javascript,
+        completeSingle: false
+    }
+});
 
 editorHTML.setValue(contenidoInicial.html);
+editorHTML.on('change', (cm, change) => {
+    // Mostrar sugerencias al escribir '<' para completar etiquetas HTML
+    if (change.text[0] === '<') {
+        cm.showHint({ hint: CodeMirror.hint.xml, completeSingle: false });
+    }
+});
+
 editorCSS.setValue(contenidoInicial.css);
+
 editorJS.setValue(contenidoInicial.js);
 
 const iframe = document.getElementById('preview-frame');
@@ -90,7 +120,7 @@ actualizarVistaPrevia();
 
 // Insertar Estructura HTML5
 document.getElementById('btn-html5').addEventListener('click', () => {
-    const plantilla = `<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Mi Proyecto</title>\n</head>\n<body>\n  \n  <h1>¡Hola Mundo!</h1>\n  \n</body>\n</html>`;
+    const plantilla = `<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Mi Proyecto</title>\n</head>\n<body>\n  \n  <h1>¡Hola Estudiantes!</h1>\n  \n</body>\n</html>`;
     if (editorHTML.getValue().trim() !== '') {
         if (confirm('¿Reemplazar tu código HTML actual con la estructura básica de HTML5?')) {
             editorHTML.setValue(plantilla);
