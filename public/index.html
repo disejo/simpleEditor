@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Código para Estudiantes</title>
+    
+    <!-- Tailwind CSS para los estilos de la interfaz -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- CodeMirror CSS (Librería para el editor de código) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/monokai.min.css">
+    
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Enlace a CSS personalizado -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans">
+
+    <!-- Barra de Navegación -->
+    <header class="bg-slate-800 text-white p-2 md:p-4 shadow-md flex flex-wrap justify-between items-center z-10 gap-2 md:gap-4">
+        
+        <div class="flex items-center gap-2">
+            <i data-lucide="code-2" class="text-blue-400"></i>
+            <h1 class="text-lg md:text-xl font-bold hidden sm:block">Laboratorio de Código</h1>
+        </div>
+
+        <!-- Controles Centrales: Mostrar/Ocultar Editores -->
+        <div class="flex items-center gap-1 bg-slate-900 rounded p-1 border border-slate-700">
+            <span class="text-xs text-slate-400 px-2 hidden lg:inline">Paneles:</span>
+            <button id="btn-toggle-html" class="px-3 py-1 rounded text-xs md:text-sm font-bold bg-slate-700 text-orange-400 hover:bg-slate-600 transition-colors" title="Mostrar/Ocultar HTML">HTML</button>
+            <button id="btn-toggle-css" class="px-3 py-1 rounded text-xs md:text-sm font-bold bg-slate-700 text-blue-400 hover:bg-slate-600 transition-colors" title="Mostrar/Ocultar CSS">CSS</button>
+            <button id="btn-toggle-js" class="px-3 py-1 rounded text-xs md:text-sm font-bold bg-slate-700 text-yellow-400 hover:bg-slate-600 transition-colors" title="Mostrar/Ocultar JS">JS</button>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex gap-2 w-full md:w-auto justify-end">
+            <button id="btn-html5" class="flex items-center gap-1 bg-purple-500 hover:bg-purple-600 px-2 py-1.5 md:px-3 md:py-1.5 rounded text-sm font-medium transition-colors" title="Insertar Estructura HTML5">
+                <i data-lucide="file-code-2" class="w-4 h-4"></i> <span class="hidden xl:inline">Estructura HTML5</span>
+            </button>
+            <button id="btn-limpiar" class="flex items-center gap-1 bg-red-500 hover:bg-red-600 px-2 py-1.5 md:px-3 md:py-1.5 rounded text-sm font-medium transition-colors" title="Borrar código">
+                <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden xl:inline">Limpiar</span>
+            </button>
+            <button id="btn-descargar" class="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 px-2 py-1.5 md:px-3 md:py-1.5 rounded text-sm font-medium transition-colors" title="Descargar proyecto">
+                <i data-lucide="download" class="w-4 h-4"></i> <span class="hidden xl:inline">Descargar</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Área de Trabajo Principal -->
+    <main class="flex-1 flex main-layout overflow-hidden">
+        
+        <!-- Columna Izquierda/Arriba: Editores de Código -->
+        <div class="w-full md:w-1/2 flex flex-col editor-column bg-slate-900 border-r border-slate-700">
+            
+            <!-- Panel HTML -->
+            <div id="panel-html" class="editor-container p-2">
+                <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded-t-lg text-sm font-semibold flex items-center justify-between">
+                    <div class="flex items-center gap-2"><i data-lucide="layout-template" class="w-4 h-4 text-orange-400"></i> HTML</div>
+                </div>
+                <div class="flex-1 overflow-hidden relative rounded-b-lg border-x border-b border-slate-700">
+                    <textarea id="html-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Panel CSS -->
+            <div id="panel-css" class="editor-container p-2">
+                <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded-t-lg text-sm font-semibold flex items-center justify-between">
+                    <div class="flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4 text-blue-400"></i> CSS</div>
+                </div>
+                <div class="flex-1 overflow-hidden relative rounded-b-lg border-x border-b border-slate-700">
+                    <textarea id="css-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Panel JavaScript -->
+            <div id="panel-js" class="editor-container p-2">
+                <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded-t-lg text-sm font-semibold flex items-center justify-between">
+                    <div class="flex items-center gap-2"><i data-lucide="file-json" class="w-4 h-4 text-yellow-400"></i> JavaScript</div>
+                </div>
+                <div class="flex-1 overflow-hidden relative rounded-b-lg border-x border-b border-slate-700">
+                    <textarea id="js-editor"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Columna Derecha/Abajo: Vista Previa (Resultado) -->
+        <div class="w-full md:w-1/2 bg-white flex flex-col preview-column relative">
+            <div class="bg-gray-200 text-gray-700 px-4 py-2 text-sm font-bold flex justify-between items-center shadow-sm z-10">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4 text-green-600"></i> Vista Previa en Vivo
+                </div>
+                <span class="text-xs font-normal text-gray-500 hidden sm:inline">Se actualiza automáticamente</span>
+            </div>
+            <!-- El iframe donde se inyectará el código del usuario -->
+            <iframe id="preview-frame" class="w-full flex-1 border-none bg-white"></iframe>
+        </div>
+
+    </main>
+
+    <!-- Scripts de CodeMirror para funcionalidad del editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script> <!-- Para HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script> <!-- Para CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script> <!-- Para JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <!-- Script principal de la aplicación -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+/* Estilos personalizados para ajustar los editores */
+body { margin: 0; overflow: hidden; }
+
+.CodeMirror {
+    height: 100% !important;
+    font-size: 14px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* Flexbox permite que los contenedores se ajusten dinámicamente si uno se oculta */
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    transition: all 0.2s ease;
+}
+
+.editor-container.oculto {
+    display: none !important;
+}
+
+/* Ajustes responsivos para pantallas pequeñas (Móviles y Tablets) */
+@media (max-width: 768px) {
+    .main-layout { flex-direction: column; }
+    .editor-column { height: 50%; width: 100%; border-right: none; border-bottom: 4px solid #334155; }
+    .preview-column { height: 50%; width: 100%; }
+}
