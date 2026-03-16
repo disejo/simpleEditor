@@ -3,13 +3,12 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Este proyecto es un editor de código web colaborativo construido con Express.js y Socket.IO, diseñado para que múltiples estudiantes puedan conectarse y editar código HTML, CSS y JavaScript simultáneamente.
+Este proyecto es un editor de código web para que estudiantes puedan practicar HTML, CSS y JavaScript de manera independiente. Cada usuario edita su propio código y ve la vista previa en tiempo real.
 
 ## Características
 
 - Editores separados para HTML, CSS y JS usando CodeMirror
 - Vista previa en vivo del código
-- Sincronización en tiempo real entre múltiples usuarios conectados
 - Interfaz responsiva con Tailwind CSS
 - Funciones para insertar estructura HTML5, limpiar código y descargar proyectos
 

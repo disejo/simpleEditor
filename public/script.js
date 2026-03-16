@@ -1,9 +1,6 @@
 // Inicializar los iconos de Lucide
 lucide.createIcons();
 
-// Conectar a Socket.IO
-const socket = io();
-
 // Código de ejemplo inicial
 let contenidoInicial = {
     html: `<div class="tarjeta">\n  <h2>¡Hola, Mundo!</h2>\n  <p>Este es tu primer proyecto.</p>\n  <button id="mi-boton">Haz clic aquí</button>\n</div>`,
@@ -18,13 +15,9 @@ const editorHTML = CodeMirror.fromTextArea(document.getElementById('html-editor'
 const editorCSS = CodeMirror.fromTextArea(document.getElementById('css-editor'), { ...opcionesEditor, mode: 'css' });
 const editorJS = CodeMirror.fromTextArea(document.getElementById('js-editor'), { ...opcionesEditor, mode: 'javascript' });
 
-// Escuchar actualizaciones del servidor
-socket.on('code-update', (data) => {
-    if (data.html !== editorHTML.getValue()) editorHTML.setValue(data.html);
-    if (data.css !== editorCSS.getValue()) editorCSS.setValue(data.css);
-    if (data.js !== editorJS.getValue()) editorJS.setValue(data.js);
-    actualizarVistaPrevia();
-});
+editorHTML.setValue(contenidoInicial.html);
+editorCSS.setValue(contenidoInicial.css);
+editorJS.setValue(contenidoInicial.js);
 
 const iframe = document.getElementById('preview-frame');
 
@@ -85,20 +78,13 @@ function actualizarVistaPrevia() {
 let temporizador;
 function alCambiarCodigo() {
     clearTimeout(temporizador);
-    temporizador = setTimeout(() => {
-        actualizarVistaPrevia();
-        // Enviar cambios al servidor
-        socket.emit('code-change', {
-            html: editorHTML.getValue(),
-            css: editorCSS.getValue(),
-            js: editorJS.getValue()
-        });
-    }, 500);
+    temporizador = setTimeout(actualizarVistaPrevia, 500);
 }
 
 editorHTML.on('change', alCambiarCodigo);
 editorCSS.on('change', alCambiarCodigo);
 editorJS.on('change', alCambiarCodigo);
+actualizarVistaPrevia();
 
 // ---- LÓGICA DE NUEVOS BOTONES Y PANELES ---- //
 
