@@ -42,9 +42,7 @@ Este proyecto es un editor de código web para que estudiantes puedan practicar 
    vercel
    ```
 
-   Sigue las instrucciones para configurar el proyecto. Vercel detectará automáticamente la configuración en `vercel.json`.
-
-**Nota:** Este proyecto usa Socket.IO para sincronización en tiempo real. Vercel es principalmente para aplicaciones serverless, por lo que las conexiones WebSocket pueden no funcionar perfectamente. Considera usar plataformas como Railway o Heroku para despliegues con servidores persistentes.
+   Vercel detectará automáticamente la configuración.
 
 ## Estructura del Proyecto
 
