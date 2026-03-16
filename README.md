@@ -26,13 +26,26 @@ Este proyecto es un editor de código web colaborativo construido con Express.js
    npm install
    ```
 
-## Ejecución
+## Despliegue en Vercel
 
-Ejecuta `npm start` para iniciar el servidor en el puerto 3000.
+1. Instala la CLI de Vercel:
+   ```bash
+   npm install -g vercel
+   ```
 
-O usa `npm run dev` para desarrollo con nodemon.
+2. Inicia sesión en Vercel:
+   ```bash
+   vercel login
+   ```
 
-Abre tu navegador en `http://localhost:3000` para acceder al editor.
+3. Despliega el proyecto:
+   ```bash
+   vercel
+   ```
+
+   Sigue las instrucciones para configurar el proyecto. Vercel detectará automáticamente la configuración en `vercel.json`.
+
+**Nota:** Este proyecto usa Socket.IO para sincronización en tiempo real. Vercel es principalmente para aplicaciones serverless, por lo que las conexiones WebSocket pueden no funcionar perfectamente. Considera usar plataformas como Railway o Heroku para despliegues con servidores persistentes.
 
 ## Estructura del Proyecto
 
