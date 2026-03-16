@@ -6,7 +6,7 @@ body { margin: 0; overflow: hidden; }
     font-size: 14px;
     font-family: 'Consolas', 'Monaco', monospace;
     border-radius: 0 0 0.5rem 0.5rem;
-}
+} 
 
 /* Flexbox permite que los contenedores se ajusten dinámicamente si uno se oculta */
 .editor-container {
