@@ -53,10 +53,10 @@
     </header>
 
     <!-- Área de Trabajo Principal -->
-    <main class="flex-1 flex main-layout overflow-hidden">
+    <main class="flex-1 flex main-layout overflow-hidden min-h-0">
         
         <!-- Columna Izquierda/Arriba: Editores de Código -->
-        <div class="w-full md:w-1/2 flex flex-col editor-column bg-slate-900 border-r border-slate-700">
+        <div id="editor-column" class="editor-column flex flex-col bg-slate-900 border-r border-slate-700 min-h-0" style="flex: 0 0 50%;">
             
             <!-- Panel HTML -->
             <div id="panel-html" class="editor-container p-2">
@@ -90,8 +90,11 @@
 
         </div>
 
+        <!-- Separador redimensionable -->
+        <div id="splitter" class="splitter"></div>
+
         <!-- Columna Derecha/Abajo: Vista Previa (Resultado) -->
-        <div class="w-full md:w-1/2 bg-white flex flex-col preview-column relative">
+        <div id="preview-column" class="preview-column flex flex-col bg-white relative min-h-0" style="flex: 1 1 0;">
             <div class="bg-gray-200 text-gray-700 px-4 py-2 text-sm font-bold flex justify-between items-center shadow-sm z-10">
                 <div class="flex items-center gap-2">
                     <i data-lucide="play" class="w-4 h-4 text-green-600"></i> Vista Previa en Vivo
@@ -105,6 +108,7 @@
             </div>
             <!-- El iframe donde se inyectará el código del usuario -->
             <iframe id="preview-frame" class="w-full flex-1 border-none bg-white"></iframe>
+
         </div>
 
     </main>

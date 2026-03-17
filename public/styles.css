@@ -21,9 +21,32 @@ body { margin: 0; overflow: hidden; }
     display: none !important;
 }
 
+/* Layout principal (split view) */
+.main-layout { min-height: 0; }
+#editor-column, #preview-column { min-height: 0; }
+
+
+/* Separador redimensionable entre paneles */
+.splitter {
+    width: 8px;
+    cursor: col-resize;
+    background: #334155;
+    transition: background 0.2s;
+}
+
+.splitter:hover {
+    background: #475569;
+}
+
+/* Línea de error en el editor */
+.cm-s-monokai .line-error {
+    background: rgba(220, 38, 38, 0.25);
+}
+
 /* Ajustes responsivos para pantallas pequeñas (Móviles y Tablets) */
 @media (max-width: 768px) {
     .main-layout { flex-direction: column; }
     .editor-column { height: 50%; width: 100%; border-right: none; border-bottom: 4px solid #334155; }
     .preview-column { height: 50%; width: 100%; }
+    .splitter { display: none; }
 }

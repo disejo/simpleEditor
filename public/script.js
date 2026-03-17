@@ -51,11 +51,113 @@ editorJS.setValue(contenidoInicial.js);
 
 const iframe = document.getElementById('preview-frame');
 
+let activeErrorLine = null;
+
+function clearErrorHighlight() {
+  if (activeErrorLine !== null) {
+    editorJS.removeLineClass(activeErrorLine, 'background', 'line-error');
+    activeErrorLine = null;
+  }
+}
+
+function highlightErrorLine(lineNumber) {
+  if (typeof lineNumber !== 'number' || lineNumber < 1) return;
+  clearErrorHighlight();
+  activeErrorLine = lineNumber - 1;
+  editorJS.addLineClass(activeErrorLine, 'background', 'line-error');
+  editorJS.scrollIntoView({ line: activeErrorLine, ch: 0 }, 100);
+}
+
+function extractLineFromStack(value) {
+  if (typeof value !== 'string') return null;
+  const match = /editor\.js:(\d+):(\d+)/.exec(value);
+  return match ? Number(match[1]) : null;
+}
+
+window.addEventListener('message', (event) => {
+  if (!event.data || event.data.type !== 'console') return;
+  const { level, args } = event.data;
+
+  if (level === 'error') {
+    const values = Array.isArray(args) ? args : [args];
+    for (const arg of values) {
+      const line = extractLineFromStack(arg);
+      if (line) {
+        highlightErrorLine(line);
+        break;
+      }
+    }
+  }
+});
+
+// Redimensionar paneles (arrastrar entre editor y vista previa)
+const splitter = document.getElementById('splitter');
+const editorColumn = document.getElementById('editor-column');
+let isResizing = false;
+
+if (splitter && editorColumn) {
+  splitter.addEventListener('mousedown', () => {
+    isResizing = true;
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', (event) => {
+    if (!isResizing) return;
+
+    const containerRect = editorColumn.parentElement.getBoundingClientRect();
+    const min = 200;
+    const max = containerRect.width - 200;
+    let newWidth = event.clientX - containerRect.left;
+    newWidth = Math.max(min, Math.min(max, newWidth));
+
+    editorColumn.style.flex = `0 0 ${newWidth}px`;
+
+    // Asegurarnos de que los editores recalculen su tamaño al cambiar el ancho
+    editorHTML.refresh();
+    editorCSS.refresh();
+    editorJS.refresh();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isResizing) return;
+    isResizing = false;
+    document.body.style.userSelect = '';
+  });
+}
+
 // Función mejorada para actualizar vista previa
 function actualizarVistaPrevia() {
+    clearErrorHighlight();
+
     const html = editorHTML.getValue();
     const css = editorCSS.getValue();
     const js = editorJS.getValue();
+
+    const consoleBridgeScript = `<script>(function(){
+        const parentWindow = window.parent;
+        const safe = (val) => {
+            try { return typeof val === 'object' ? JSON.stringify(val) : String(val); }
+            catch (err) { return String(err); }
+        };
+        const send = (level, ...args) => {
+            if (!parentWindow) return;
+            parentWindow.postMessage({ type: 'console', level, args: args.map(safe) }, '*');
+        };
+        const methods = ['log','info','warn','error','debug'];
+        methods.forEach((method) => {
+            const original = console[method];
+            console[method] = function(...args) {
+                send(method, ...args);
+                original && original.apply(console, args);
+            };
+        });
+        window.addEventListener('error', function(evt) {
+            send('error', evt.message + ' (' + evt.filename + ':' + evt.lineno + ':' + evt.colno + ')');
+        });
+        window.addEventListener('unhandledrejection', function(evt) {
+            send('error', 'Unhandled Promise Rejection: ' + (evt.reason && (evt.reason.message || JSON.stringify(evt.reason))));
+        });
+    })();<\/script>`;
 
     let contenidoIframe = '';
 
@@ -72,17 +174,20 @@ function actualizarVistaPrevia() {
             }
         }
         
-        // Inyectar JS antes del cierre del body
+        // Inyectar JS antes del cierre del body (y puente de consola)
         if (js.trim() !== '') {
-            const scriptTag = `<script>try { ${js} } catch (error) { console.error("Error JS: ", error); }<\/script>`;
+            const userScriptSrc = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`${js}\n//# sourceURL=editor.js`);
+            const scriptTag = `<script src="${userScriptSrc}"></script>`;
+            const combinedScripts = consoleBridgeScript + scriptTag;
             if (contenidoIframe.includes('</body>')) {
-                contenidoIframe = contenidoIframe.replace('</body>', `${scriptTag}</body>`);
+                contenidoIframe = contenidoIframe.replace('</body>', `${combinedScripts}</body>`);
             } else {
-                contenidoIframe += scriptTag;
+                contenidoIframe += combinedScripts;
             }
         }
     } else {
         // Comportamiento por defecto (fragmentos)
+        const userScriptSrc = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`${js}\n//# sourceURL=editor.js`);
         contenidoIframe = `
             <!DOCTYPE html>
             <html lang="es">
@@ -93,7 +198,8 @@ function actualizarVistaPrevia() {
             </head>
             <body>
                 ${html}
-                <script>try { ${js} } catch (error) { console.error("Error JS: ", error); }<\/script>
+                ${consoleBridgeScript}
+                <script src="${userScriptSrc}"></script>
             </body>
             </html>
         `;
