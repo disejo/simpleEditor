@@ -99,10 +99,8 @@ function actualizarVistaPrevia() {
         `;
     }
 
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(contenidoIframe);
-    doc.close();
+    // Limpiar completamente el iframe y cargar el nuevo contenido para evitar estado persistente
+    iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(contenidoIframe);
 }
 
 let temporizador;
@@ -113,7 +111,12 @@ function alCambiarCodigo() {
 
 editorHTML.on('change', alCambiarCodigo);
 editorCSS.on('change', alCambiarCodigo);
-editorJS.on('change', alCambiarCodigo);
+
+// No actualizamos automáticamente al editar JS para que no se reinicie la vista previa.
+// Usa el botón "Actualizar JS" para aplicar los cambios de JS cuando quieras.
+const btnActualizar = document.getElementById('btn-actualizar');
+btnActualizar.addEventListener('click', actualizarVistaPrevia);
+
 actualizarVistaPrevia();
 
 // ---- LÓGICA DE NUEVOS BOTONES Y PANELES ---- //

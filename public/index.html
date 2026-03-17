@@ -95,7 +95,12 @@
                 <div class="flex items-center gap-2">
                     <i data-lucide="play" class="w-4 h-4 text-green-600"></i> Vista Previa en Vivo
                 </div>
-                <span class="text-xs font-normal text-gray-500 hidden sm:inline">Se actualiza automáticamente</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-normal text-gray-500 hidden sm:inline">Se actualiza automáticamente (HTML/CSS)</span>
+                    <button id="btn-actualizar" class="hidden sm:inline-flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Actualizar JS
+                    </button>
+                </div>
             </div>
             <!-- El iframe donde se inyectará el código del usuario -->
             <iframe id="preview-frame" class="w-full flex-1 border-none bg-white"></iframe>
