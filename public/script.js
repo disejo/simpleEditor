@@ -206,7 +206,9 @@ function actualizarVistaPrevia() {
     }
 
     // Limpiar completamente el iframe y cargar el nuevo contenido para evitar estado persistente
-    iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(contenidoIframe);
+    // Usamos srcdoc para que el iframe mantenga un origen válido para embeds como YouTube
+    iframe.removeAttribute('src');
+    iframe.srcdoc = contenidoIframe;
 }
 
 let temporizador;
