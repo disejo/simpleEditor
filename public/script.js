@@ -50,8 +50,85 @@ editorCSS.setValue(contenidoInicial.css);
 editorJS.setValue(contenidoInicial.js);
 
 const iframe = document.getElementById('preview-frame');
+const libSelector = document.getElementById('lib-selector');
+const btnAddLibrary = document.getElementById('btn-add-lib');
+const selectedLibsContainer = document.getElementById('selected-libs');
+const selectedLibraries = [];
+let previewBlobUrl = null;
 
 let activeErrorLine = null;
+
+function renderSelectedLibraries() {
+    if (!selectedLibraries.length) {
+        selectedLibsContainer.classList.add('hidden');
+        selectedLibsContainer.innerHTML = '';
+        return;
+    }
+
+    selectedLibsContainer.classList.remove('hidden');
+    selectedLibsContainer.innerHTML = selectedLibraries.map(lib =>
+        `<span class="inline-flex items-center gap-1 rounded-full bg-slate-100 text-slate-700 px-2 py-1 border border-slate-200">
+            <span>${lib.name}</span>
+            <button class="text-xs text-slate-500 hover:text-slate-900" data-remove-lib="${lib.name}" aria-label="Eliminar ${lib.name}">×</button>
+        </span>`
+    ).join('');
+}
+
+function injectIntoHead(html, injection) {
+    if (!injection) return html;
+    if (html.includes('</head>')) {
+        return html.replace('</head>', `${injection}\n</head>`);
+    }
+    if (html.includes('<head>')) {
+        return html.replace('<head>', `<head>${injection}`);
+    }
+    if (html.match(/<html[^>]*>/i)) {
+        return html.replace(/<html([^>]*)>/i, `<html$1><head>${injection}</head>`);
+    }
+    return `${injection}\n${html}`;
+}
+
+function getLibraryHtml() {
+    return selectedLibraries.map(lib => {
+        const urls = lib.urls;
+        return urls.map(url => {
+            // Detectar tipo de archivo por extensión y origen
+            if (url.endsWith('.css') || url.includes('fonts.googleapis.com') || url.includes('fonts.google.com')) {
+                return `<link rel="stylesheet" href="${url}">`;
+            } else {
+                return `<script src="${url}"><\/script>`;
+            }
+        }).join('\n');
+    }).join('\n');
+}
+
+function addSelectedLibrary() {
+    const selectedOption = libSelector.selectedOptions[0];
+    if (!selectedOption || !selectedOption.value) return;
+    
+    const selectedName = selectedOption.textContent?.trim();
+    const selectedUrls = selectedOption.value.split('|');
+
+    selectedLibraries.length = 0;
+    selectedLibraries.push({ name: selectedName, urls: selectedUrls });
+    libSelector.value = '';
+    renderSelectedLibraries();
+    actualizarVistaPrevia();
+}
+
+selectedLibsContainer.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-remove-lib]');
+    if (!button) return;
+    const libName = button.dataset.removeLib;
+    const index = selectedLibraries.findIndex(lib => lib.name === libName);
+    if (index >= 0) {
+        selectedLibraries.splice(index, 1);
+        renderSelectedLibraries();
+        actualizarVistaPrevia();
+    }
+});
+
+btnAddLibrary.addEventListener('click', addSelectedLibrary);
 
 function clearErrorHighlight() {
   if (activeErrorLine !== null) {
@@ -161,10 +238,12 @@ function actualizarVistaPrevia() {
 
     let contenidoIframe = '';
 
-    // Si el alumno utiliza la estructura HTML5 completa, inyectamos el CSS y JS inteligentemente
+    // Si el alumno utiliza la estructura HTML5 completa, inyectamos el CSS, librerías y JS inteligentemente
     if (html.toLowerCase().includes('<html')) {
         contenidoIframe = html;
-        
+        const libraryHtml = getLibraryHtml();
+        contenidoIframe = injectIntoHead(contenidoIframe, libraryHtml);
+
         // Inyectar CSS antes del cierre del head
         if (css.trim() !== '') {
             if (contenidoIframe.includes('</head>')) {
@@ -186,6 +265,7 @@ function actualizarVistaPrevia() {
             }
         }
     } else {
+        const libraryHtml = getLibraryHtml();
         // Comportamiento por defecto (fragmentos)
         const userScriptSrc = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`${js}\n//# sourceURL=editor.js`);
         contenidoIframe = `
@@ -194,6 +274,7 @@ function actualizarVistaPrevia() {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                ${libraryHtml}
                 <style>${css}</style>
             </head>
             <body>
@@ -205,8 +286,8 @@ function actualizarVistaPrevia() {
         `;
     }
 
-    // Limpiar completamente el iframe y cargar el nuevo contenido para evitar estado persistente
-    // Usamos srcdoc para que el iframe mantenga un origen válido para embeds como YouTube
+    // Limpiar completamente el iframe y cargar el nuevo contenido para evitar estado persistente.
+    // Usamos srcdoc para compatibilidad con recursos externos como YouTube.
     iframe.removeAttribute('src');
     iframe.srcdoc = contenidoIframe;
 }
@@ -288,13 +369,15 @@ document.getElementById('btn-descargar').addEventListener('click', () => {
     const html = editorHTML.getValue();
     const css = editorCSS.getValue();
     const js = editorJS.getValue();
+    const libraryHtml = getLibraryHtml();
 
     let contenidoFinal = '';
     if (html.toLowerCase().includes('<html')) {
-         contenidoFinal = html.replace('</head>', `<style>\n${css}\n</style>\n</head>`)
-                              .replace('</body>', `<script>\n${js}\n<\/script>\n</body>`);
+         contenidoFinal = injectIntoHead(html, libraryHtml);
+         contenidoFinal = contenidoFinal.replace('</head>', `<style>\n${css}\n</style>\n</head>`)
+                                      .replace('</body>', `<script>\n${js}\n<\/script>\n</body>`);
     } else {
-         contenidoFinal = `<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<title>Mi Proyecto</title>\n<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n<script>\n${js}\n<\/script>\n</body>\n</html>`;
+         contenidoFinal = `<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<title>Mi Proyecto</title>\n${libraryHtml}\n<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n<script>\n${js}\n<\/script>\n</body>\n</html>`;
     }
     
     const blob = new Blob([contenidoFinal], { type: 'text/html' });
