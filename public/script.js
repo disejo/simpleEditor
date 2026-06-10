@@ -203,7 +203,7 @@ if (splitter && editorColumn) {
 }
 
 // Función mejorada para actualizar vista previa
-function actualizarVistaPrevia() {
+function actualizarVistaPrevia(includeJS = false) {
     clearErrorHighlight();
 
     const html = editorHTML.getValue();
@@ -253,8 +253,8 @@ function actualizarVistaPrevia() {
             }
         }
         
-        // Inyectar JS antes del cierre del body (y puente de consola)
-        if (js.trim() !== '') {
+        // Inyectar JS antes del cierre del body (y puente de consola) SOLO si se solicita
+        if (includeJS && js.trim() !== '') {
             const userScriptSrc = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`${js}\n//# sourceURL=editor.js`);
             const scriptTag = `<script src="${userScriptSrc}"></script>`;
             const combinedScripts = consoleBridgeScript + scriptTag;
@@ -268,6 +268,9 @@ function actualizarVistaPrevia() {
         const libraryHtml = getLibraryHtml();
         // Comportamiento por defecto (fragmentos)
         const userScriptSrc = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(`${js}\n//# sourceURL=editor.js`);
+        const scriptTag = `<script src="${userScriptSrc}"></script>`;
+        const bridge = consoleBridgeScript;
+        const scriptsToInject = includeJS && js.trim() !== '' ? (bridge + scriptTag) : '';
         contenidoIframe = `
             <!DOCTYPE html>
             <html lang="es">
@@ -279,8 +282,7 @@ function actualizarVistaPrevia() {
             </head>
             <body>
                 ${html}
-                ${consoleBridgeScript}
-                <script src="${userScriptSrc}"></script>
+                ${scriptsToInject}
             </body>
             </html>
         `;
@@ -304,7 +306,7 @@ editorCSS.on('change', alCambiarCodigo);
 // No actualizamos automáticamente al editar JS para que no se reinicie la vista previa.
 // Usa el botón "Actualizar JS" para aplicar los cambios de JS cuando quieras.
 const btnActualizar = document.getElementById('btn-actualizar');
-btnActualizar.addEventListener('click', actualizarVistaPrevia);
+btnActualizar.addEventListener('click', () => actualizarVistaPrevia(true));
 
 actualizarVistaPrevia();
 
